@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Execute Python Scripts</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-9ndCyUa6mWp4mA+G9F08Xrv4Iw5yEfIko8Hglr74B3y1rZ0AMl8XK5Zr5K2YYbKp"
+        crossorigin="anonymous"
+    >
+
+    <style>
+        body {
+            background-color: #e9ecef;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+        .form-control {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            height: 45px;
+            font-size: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 12px;
+            font-size: 18px;
+            border-radius: 8px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #response {
+            margin-top: 20px;
+            padding: 15px;
+            display: none;
+            word-wrap: break-word;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Python Script Executor</h2>
+
+    <input
+        type="text"
+        id="parameterInput"
+        class="form-control"
+        placeholder="Enter your parameter (e.g., Portugal)"
+    />
+
+    <div class="btn-group">
+        <button class="btn btn-primary" onclick="runScript('script1')">Run Script 1</button>
+        <button class="btn btn-success" onclick="runScript('script2')">Run Script 2</button>
+        <button class="btn btn-danger" onclick="runScript('script3')">Run Script 3</button>
+    </div>
+
+    <div id="response" class="alert mt-4" role="alert">
+        Click a button to execute a script.
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+DDT8lK5Y5r1MAOzI+7LLRXD3hH9+"
+    crossorigin="anonymous"
+></script>
+
+<script>
+    function runScript(scriptName) {
+    const responseDiv = document.getElementById('response');
+    const parameter = document.getElementById('parameterInput').value;
+
+    if (!parameter) {
+        responseDiv.className = 'alert alert-warning';
+        responseDiv.textContent = 'Please enter a parameter before executing the script.';
+        responseDiv.style.display = 'block';
+        return;
+    }
+<!-- here you insert the api gateways' urls for api communication with lanbda
+    const apiUrls = {
+        script1: { url: '<api gateway url>', method: '<method>' },
+    };
+-->
+    const { url, method } = apiUrls[scriptName];
+    const options = {
+        method: method,
+        headers: { 'Content-Type': 'application/json' }
+    };
+
+    if (method === 'POST') {
+        options.body = JSON.stringify({ topic: parameter });
+    }
+
+    const requestUrl = method === 'GET'
+        ? `${url}?parameter=${encodeURIComponent(parameter)}`
+        : url;
+
+    fetch(requestUrl, options)
+        .then(response => response.json().catch(() => response.text())) // Handle both JSON and plain text
+        .then(result => {
+            const message = typeof result === 'string' ? result : result.message || JSON.stringify(result);
+            responseDiv.className = 'alert alert-success';
+            responseDiv.textContent = message;
+        })
+        .catch(error => {
+            responseDiv.className = 'alert alert-danger';
+            responseDiv.textContent = `Failed to execute ${scriptName}: ${error.message}`;
+        });
+
+    responseDiv.style.display = 'block';
+    }
+
+</script>
+
+</body>
+</html>
